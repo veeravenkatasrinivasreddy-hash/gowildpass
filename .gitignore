@@ -16,3 +16,15 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Debug/temp files
+debug_*.py
+debug_*.png
+after_login.png
+save_session.py
+test_search.py
