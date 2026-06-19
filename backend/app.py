@@ -2,18 +2,22 @@
 Flask backend for GoWild Pass flight finder.
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+
 from flask import Flask, request, jsonify
 from flask import send_from_directory
 from airports import get_nearby
 from frontier import search_flights, book_flight
-import os
 
-app = Flask(__name__, static_folder="../frontend")
+FRONTEND = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+app = Flask(__name__, static_folder=FRONTEND, static_url_path="")
 
 
 @app.route("/")
 def index():
-    return send_from_directory("../frontend", "index.html")
+    return send_from_directory(FRONTEND, "index.html")
 
 
 @app.route("/api/search", methods=["POST"])
@@ -26,9 +30,9 @@ def search():
     if not origin or not destination or not date:
         return jsonify({"error": "origin, destination, and date are required"}), 400
 
-    # Expand to nearby airports
-    origins = get_nearby(origin)
-    destinations = get_nearby(destination)
+    nearby = data.get("nearby", False)
+    origins = get_nearby(origin) if nearby else [origin]
+    destinations = get_nearby(destination) if nearby else [destination]
 
     all_flights = []
     for org in origins:

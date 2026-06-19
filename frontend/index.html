@@ -14,6 +14,10 @@
     </header>
 
     <section class="search-box">
+      <div class="trip-type">
+        <label><input type="radio" name="tripType" value="OW" checked /> One Way</label>
+        <label><input type="radio" name="tripType" value="RT" /> Round Trip</label>
+      </div>
       <div class="row">
         <div class="field">
           <label>From (airport code)</label>
@@ -24,9 +28,19 @@
           <input id="destination" type="text" placeholder="e.g. ATL" maxlength="3" />
         </div>
         <div class="field">
-          <label>Date</label>
+          <label>Departure Date</label>
           <input id="date" type="date" />
         </div>
+        <div class="field" id="return-field" style="display:none">
+          <label>Return Date</label>
+          <input id="return-date" type="date" />
+        </div>
+      </div>
+      <div class="nearby-option">
+        <label>
+          <input type="checkbox" id="nearbyAirports" />
+          Include nearby airports
+        </label>
       </div>
       <button id="searchBtn" onclick="searchFlights()">Search Flights</button>
     </section>

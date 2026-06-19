@@ -1,5 +1,15 @@
 let pendingBooking = null;
 
+// Show/hide return date based on trip type
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('input[name="tripType"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+      document.getElementById("return-field").style.display =
+        radio.value === "RT" ? "block" : "none";
+    });
+  });
+});
+
 async function searchFlights() {
   const origin = document.getElementById("origin").value.trim().toUpperCase();
   const destination = document.getElementById("destination").value.trim().toUpperCase();
@@ -21,7 +31,7 @@ async function searchFlights() {
     const res = await fetch("/api/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ origin, destination, date }),
+      body: JSON.stringify({ origin, destination, date, trip_type: document.querySelector('input[name="tripType"]:checked').value, nearby: document.getElementById("nearbyAirports").checked }),
     });
 
     const data = await res.json();
@@ -53,22 +63,48 @@ function renderFlights(flights) {
   section.classList.remove("hidden");
 
   if (!flights || flights.length === 0) {
-    list.innerHTML = `<div class="no-flights">No $16 GoWild flights found for this route and date.<br>Try nearby airports or a different date.</div>`;
+    list.innerHTML = `<div class="no-flights">No GoWild flights found. Try a different date or nearby airports.</div>`;
     return;
   }
 
-  list.innerHTML = flights.map((f, i) => `
+  // Date price calendar (from first flight's date_prices)
+  const datePrices = flights[0]?.date_prices || [];
+  let calendarHtml = "";
+  if (datePrices.length > 0) {
+    calendarHtml = `
+      <div class="date-calendar">
+        <h3>GoWild Prices — Next 15 Days</h3>
+        <div class="date-grid">
+          ${datePrices.map(d => `
+            <div class="date-cell ${d.price === '$16' ? 'price-low' : ''}">
+              <div class="date-label">${d.date}</div>
+              <div class="date-price">${d.price}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>`;
+  }
+
+  const searchDate = document.getElementById("date").value;
+  const displayDate = searchDate ? new Date(searchDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "";
+
+  // Individual flights
+  const flightCards = flights.filter(f => f.departure).map((f, i) => `
     <div class="flight-card">
-      <div>
+      <div class="flight-info">
         <div class="flight-route">${f.origin} → ${f.destination}</div>
-        <div class="flight-meta">${f.raw || "GoWild Pass flight"}</div>
+        <div class="flight-date">${displayDate}</div>
+        <div class="flight-times">${f.departure} → ${f.arrival}</div>
+        <div class="flight-meta">${f.duration} &nbsp;|&nbsp; ${f.stops}</div>
       </div>
       <div class="flight-price">${f.price}</div>
-      <button class="btn-book" onclick="openBookModal(${i}, '${f.origin}', '${f.destination}')">
+      <button class="btn-book" onclick="openBookModal(${f.index}, '${f.origin}', '${f.destination}')">
         Book
       </button>
     </div>
   `).join("");
+
+  list.innerHTML = calendarHtml + (flightCards || `<div class="no-flights">No available flights on this date. Pick a date from the calendar above.</div>`);
 }
 
 function openBookModal(index, origin, destination) {

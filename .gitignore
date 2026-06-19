@@ -1,5 +1,6 @@
 # Credentials — never commit
 .env
+frontier_session.json
 
 # OS files
 .DS_Store
